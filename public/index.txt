@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Perpustakaan Digital</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 700px; margin: 30px auto; padding: 0 20px; background: #f4f6f9; color: #333; }
+        h1, h2 { color: #0070f3; }
+        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        form { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        input, button { padding: 10px; margin: 8px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #0070f3; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background: #005bb5; }
+    </style>
+</head>
+<body>
+    <h1>📚 Perpustakaan Digital</h1>
+    
+    <form id="bookForm">
+        <h2>Tambah Buku Baru</h2>
+        <input type="text" id="title" placeholder="Judul Buku" required>
+        <input type="text" id="author" placeholder="Penulis" required>
+        <input type="number" id="year" placeholder="Tahun Terbit" required>
+        <button type="submit">Simpan Buku</button>
+    </form>
+
+    <h2>Daftar Buku</h2>
+    <div id="bookList">Memuat data buku...</div>
+
+    <script>
+        async function fetchBooks() {
+            try {
+                const res = await fetch('/api/books');
+                const result = await res.json();
+                const listDiv = document.getElementById('bookList');
+                
+                if (result.success && result.data.length > 0) {
+                    listDiv.innerHTML = result.data.map(book => `
+                        <div class="card">
+                            <h3>${book.title}</h3>
+                            <p><strong>Penulis:</strong> ${book.author} | <strong>Tahun:</strong> ${book.year}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    listDiv.innerHTML = '<p>Belum ada buku di perpustakaan.</p>';
+                }
+            } catch (err) {
+                document.getElementById('bookList').innerHTML = '<p>Gagal memuat data buku.</p>';
+            }
+        }
+
+        document.getElementById('bookForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const year = document.getElementById('year').value;
+
+            const res = await fetch('/api/books', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, author, year })
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                alert('Buku berhasil ditambahkan!');
+                document.getElementById('bookForm').reset();
+                fetchBooks();
+            } else {
+                alert('Gagal: ' + result.error);
+            }
+        });
+
+        fetchBooks();
+    </script>
+</body>
+</html>
